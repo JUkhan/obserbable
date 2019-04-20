@@ -32,7 +32,6 @@ function map(selector) {
         })
     }
 }
-
 function filter(selector) {
     return (source) => {
         return new Observable(destination => {
@@ -49,7 +48,6 @@ function filter(selector) {
         })
     }
 }
-
 function take(limit) {
     return (source) => {
         return new Observable(destination => {
@@ -69,6 +67,26 @@ function take(limit) {
                 }
             })
         });
+    }
+}
+function debounceTime(millisecond) {
+    return (source) => {
+        let tid;
+        return new Observable(destination => {
+            return source.subscribe({
+                next(val) {
+                    if (tid) clearTimeout(tid);
+                    tid = setTimeout(() => {
+                        destination.next(val);
+                    }, millisecond);
+
+                },
+                complete() {
+                    destination.complete && destination.complete();
+                }
+            })
+
+        })
     }
 }
 
@@ -94,13 +112,13 @@ class Observable {
             return typeof subscription === 'function' ? subscription() : subscription;
         }
         subscription = this.__subscribe(observer);
+        this.observer = observer;
         return observer.unsubscribe;
     }
 
     pipe(...operators) {
         return operators.reduce((source, operator) => operator(source), this);
     }
-    
     static of(...args) {
         return new Observable(observer => {
             args.forEach(observer.next);
@@ -108,7 +126,6 @@ class Observable {
             return 1010
         })
     }
-    
     static interval(millisecond) {
         return new Observable(destination => {
             let i = 1, tid = setInterval(() => {
@@ -119,7 +136,18 @@ class Observable {
 
     }
 }
+class Subject extends Observable {
+    constructor() {
+        super(observer => observer.complete);
 
+    }
+    next(val) {
+        this.observer && this.observer.next(val)
+    }
+    complete() {
+        this.observer && this.observer.complete();
+    }
+}
 
 Observable.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10).pipe(
     map(v => v * 3),
@@ -137,3 +165,16 @@ var subs = Observable.interval(100).pipe(
 });
 
 
+var sub = new Subject();
+
+sub.next('10000---22222')
+
+sub.pipe(debounceTime(500)).subscribe({
+    next(val) { console.log(val) },
+    complete() { console.log('sub-complete...') }
+});
+
+sub.next('sub1-val')
+sub.next('sub1-val-2')
+//sub.complete();
+sub.next('end')
