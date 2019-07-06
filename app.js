@@ -138,7 +138,7 @@ class Observable {
 }
 class Subject extends Observable {
     constructor() {
-        super(observer => observer.complete);
+        super(observer => { });
 
     }
     next(val) {
@@ -149,19 +149,22 @@ class Subject extends Observable {
     }
 }
 
-Observable.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10).pipe(
+const stream$ = Observable.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10).pipe(
     map(v => v * 3),
     take(5)
-).subscribe({
+);
+stream$.subscribe({
     next(val) {
         console.log(val)
-    }
+    },
+    complete() { console.log('completed.') }
 });
 
-var subs = Observable.interval(100).pipe(
+/*var subs = Observable.interval(100).pipe(
     take(5)
-).subscribe({
-    next(val) { console.log(val) }
+)*/stream$.subscribe({
+    next(val) { console.log('--', val) },
+    complete() { console.log('completed..') }
 });
 
 
@@ -169,7 +172,7 @@ var sub = new Subject();
 
 sub.next('10000---22222')
 
-sub.pipe(debounceTime(500)).subscribe({
+sub.subscribe({
     next(val) { console.log(val) },
     complete() { console.log('sub-complete...') }
 });

@@ -1,15 +1,15 @@
-import { from } from "./observer";
+import { from, interval } from "./observable";
 import { IObserver } from "./interfaces";
-import { map } from "./operators";
+import { map, filter, take, debounceTime } from "./operators";
 const app = document.getElementById("app");
-function print(message: string) {
+function print(message: any) {
   app.innerHTML += message;
 }
 print("<h3>Home made Rxjs</he>");
 
-class SampleObserver<T> implements IObserver<T> {
+class SampleObserver implements IObserver<any> {
   constructor(private print: (message: any) => void) { }
-  onNext(data: T) {
+  onNext(data: any) {
     this.print(`<p>data: ${data}</p>`);
     //throw Error('opps!')
   }
@@ -21,18 +21,15 @@ class SampleObserver<T> implements IObserver<T> {
   }
 }
 
-from([1, 2, 3, 4, 5, 6, 7])
-  .pipe(
-    map<number, string>(data => {
-      if (data > 3) throw Error("not gonna happened after this");
-      return `${data * 2}`;
-    }),
-    map(a => {
-      return a + "-1";
-    }),
-    map(a => {
-      return a + "-2";
-    })
-  )
-  .subscribe(new SampleObserver(print));
+
+
+const arr$ = interval(500).pipe(
+  map(a => a * 100),
+  filter(a => a > 200)
+);
+
+
+arr$.pipe(take(5)).subscribe(new SampleObserver(print));
+
+
 
