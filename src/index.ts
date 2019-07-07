@@ -1,6 +1,6 @@
-import { from, interval } from "./observable";
+import { from, interval, of, fromPromise } from "./observable";
 import { IObserver } from "./interfaces";
-import { map, filter, take, debounceTime } from "./operators";
+import { map, filter, take, debounceTime, flatMap } from "./operators";
 const app = document.getElementById("app");
 function print(message: any) {
   app.innerHTML += message;
@@ -21,15 +21,23 @@ class SampleObserver implements IObserver<any> {
   }
 }
 
+function getPromiseData(data: any): Promise<any> {
+  return new Promise((accept, deny) => {
+    setTimeout(() => {
+      accept(data);
+    }, data * 100);
+  })
+}
 
-
-const arr$ = interval(500).pipe(
+const arr$ = of(1, 2, 3, [4, 5, 6], 7, [8, 9, 10]).pipe(
+  flatMap(data => Array.isArray(data) ? from(data) : fromPromise(getPromiseData(data))),
   map(a => a * 100),
-  filter(a => a > 200)
+
+  //filter(a => a > 200)
 );
 
 
-arr$.pipe(take(5)).subscribe(new SampleObserver(print));
+arr$.subscribe(new SampleObserver(print));
 
 
 

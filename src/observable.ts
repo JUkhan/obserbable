@@ -7,8 +7,9 @@ export class Observable<T> {
 
   }
   subscribe(observer: IObserver<T>): () => void {
+    console.log(observer);
     try {
-      observer['isDone'] = false;
+      observer.isDone = false;
       this.observer = observer;
       this.dispose = this.subsciptionCallback(this as any);
       return this.dispose;
@@ -20,17 +21,22 @@ export class Observable<T> {
     return operators.reduce((source, operator) => operator(source), this);
   }
   private onNext(data) {
-    !this.observer['isDone'] && this.observer.onNext(data)
+    console.log('----', data)
+    /*!this.observer.isDone &&*/ this.observer.onNext(data)
   }
   private onComplete() {
-    if (this.observer['isDone']) return;
-    this.observer['isDone'] = true;
-    this.observer.onComplete();
-    typeof this.dispose === 'function' && this.dispose();
+    //console.log(this.observer);
+    if (this.observer.isDone || this.observer.hasInnerObservable || this.observer.asyncLock) return;
+    this.unsubscribe();
   }
   private onError(err) {
     this.observer.onError(err);
-    this.onComplete();
+    this.unsubscribe();
+  }
+  private unsubscribe() {
+    this.observer.isDone = true;
+    this.observer.onComplete();
+    typeof this.dispose === 'function' && this.dispose();
   }
 }
 
@@ -62,4 +68,21 @@ export function interval(millisecond: number) {
       observer.onComplete();
     }
   });
+}
+export function fromPromise(promise: Promise<any>) {
+  return new Observable(observer => {
+    observer.asyncLock = true;
+
+    promise.then(res => {
+      console.log(res);
+      observer.onNext(res)
+    })
+      .then(res => observer.onComplete())
+      .catch(err => observer.onError(err))
+
+    return () => {
+      observer.onComplete();
+    }
+
+  })
 }
