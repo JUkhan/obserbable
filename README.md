@@ -1,2 +1,2 @@
 # obserbable
-replica of rxjs
+Home made rxjs
