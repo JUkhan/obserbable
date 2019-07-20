@@ -39,5 +39,25 @@ const arr$ = of(1, 2, 3, [4, 5, 6], 7, [8, 9, 10]).pipe(
 
 interval(400).pipe(take(5)).subscribe(new SampleObserver(print));
 
+var data = [
+  { id: 1, pid: null, name: 'parent1' },
+  { id: 2, pid: null, name: 'parent2' },
+  { id: 3, pid: null, name: 'parent3' },
+  { id: 4, pid: 2, name: 'parent2-child1' },
+  { id: 5, pid: 2, name: 'parent2-child2' },
+  { id: 6, pid: 5, name: 'parent5-child1' },
+  { id: 7, pid: 3, name: 'parent3-child1' },
+  { id: 8, pid: 6, name: 'parent6-child101' },
+]
+var treeData = data.filter(it => it.pid === null);
 
+function findChildren(source: any[], tdata: any[]) {
+  tdata.forEach(it => {
+    it.children = source.filter(child => child.pid === it.id);
+    it.children.length && findChildren(source, it.children)
+  })
+}
+
+findChildren(data, treeData);
+console.log(treeData)
 
